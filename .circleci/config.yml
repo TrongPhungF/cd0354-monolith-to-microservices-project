@@ -19,7 +19,7 @@ jobs:
           name: Build Docker Images
           command: |
             docker-compose -f ./docker-compose-build.yaml build --parallel
-            docker-compose -f ./docker-compose-build.yaml push --parallel
+#            docker-compose -f ./docker-compose-build.yaml push --parallel
 #            docker tag $UDAGRAM_API_FEED_IMAGE_NAME $DOCKER_USERNAME/$UDAGRAM_API_FEED_IMAGE_NAME:$TAG
 #            docker tag $UDAGRAM_API_USER_IMAGE_NAME $DOCKER_USERNAME/$UDAGRAM_API_USER_IMAGE_NAME:$TAG
 #            docker tag $UDAGRAM_FRONTEND_IMAGE_NAME $DOCKER_USERNAME/$UDAGRAM_FRONTEND_IMAGE_NAME:$TAG
@@ -34,7 +34,7 @@ jobs:
           name: Push Docker Images
           command: |
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-            docker-compose -f ./docker-compose-build.yaml push --parallel
+            docker-compose -f ./docker-compose-build.yaml push
 #            docker push $DOCKER_USERNAME/$UDAGRAM_API_FEED_IMAGE_NAME:$TAG
 #            docker push $DOCKER_USERNAME/$UDAGRAM_API_USER_IMAGE_NAME:$TAG
 #            docker push $DOCKER_USERNAME/$UDAGRAM_FRONTEND_IMAGE_NAME:$TAG
