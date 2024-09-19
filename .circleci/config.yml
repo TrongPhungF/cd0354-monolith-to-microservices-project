@@ -5,13 +5,7 @@ orbs:
 jobs:
   build-docker:
     docker:
-      - image: circleci/python:3.7  # Adjust the base image as required
-    environment:
-      - UDAGRAM_API_FEED_IMAGE_NAME: udagram-api-feed
-      - UDAGRAM_API_USER_IMAGE_NAME: udagram-api-user
-      - UDAGRAM_FRONTEND_IMAGE_NAME: udagram-frontend
-      - UDAGRAM_REVERSEPROXY_IMAGE_NAME: reverseproxy
-#      - TAG: latest
+      - image: circleci/python:3.7
     steps:
       - checkout
       - setup_remote_docker
@@ -19,11 +13,7 @@ jobs:
           name: Build Docker Images
           command: |
             docker-compose -f ./docker-compose-build.yaml build --parallel
-#            docker-compose -f ./docker-compose-build.yaml push --parallel
-#            docker tag $UDAGRAM_API_FEED_IMAGE_NAME $DOCKER_USERNAME/$UDAGRAM_API_FEED_IMAGE_NAME:$TAG
-#            docker tag $UDAGRAM_API_USER_IMAGE_NAME $DOCKER_USERNAME/$UDAGRAM_API_USER_IMAGE_NAME:$TAG
-#            docker tag $UDAGRAM_FRONTEND_IMAGE_NAME $DOCKER_USERNAME/$UDAGRAM_FRONTEND_IMAGE_NAME:$TAG
-#            docker tag $UDAGRAM_REVERSEPROXY_IMAGE_NAME $DOCKER_USERNAME/$UDAGRAM_REVERSEPROXY_IMAGE_NAME:$TAG
+
   push-docker:
     docker:
       - image: circleci/python:3.7
@@ -31,14 +21,14 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
+          name: Docker login
+          command: |
+            echo docker images
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - run:
           name: Push Docker Images
           command: |
-            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-            docker-compose -f ./docker-compose-build.yaml push
-#            docker push $DOCKER_USERNAME/$UDAGRAM_API_FEED_IMAGE_NAME:$TAG
-#            docker push $DOCKER_USERNAME/$UDAGRAM_API_USER_IMAGE_NAME:$TAG
-#            docker push $DOCKER_USERNAME/$UDAGRAM_FRONTEND_IMAGE_NAME:$TAG
-#            docker push $DOCKER_USERNAME/$UDAGRAM_REVERSEPROXY_IMAGE_NAME:$TAG
+            docker-compose -f ./docker-compose-build.yaml push --parallel
 
 workflows:
   version: 2
