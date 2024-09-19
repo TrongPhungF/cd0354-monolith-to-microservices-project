@@ -3,16 +3,16 @@ services:
   reverseproxy:
     build:
       context: ./udagram-reverseproxy
-    image: $DOCKER_USERNAME/reverseproxy
+    image: ${DOCKER_USERNAME}/reverseproxy
   api_user:
     build:
       context: ./udagram-api-user
-    image: $DOCKER_USERNAME/udagram-api-user
+    image: ${DOCKER_USERNAME}/udagram-api-user
   api_feed:
     build:
       context: ./udagram-api-feed
-    image: $DOCKER_USERNAME/udagram-api-feed
+    image: ${DOCKER_USERNAME}/udagram-api-feed
   frontend:
     build:
       context: ./udagram-frontend
-    image: $DOCKER_USERNAME/udagram-frontend
+    image: ${DOCKER_USERNAME}/udagram-frontend
