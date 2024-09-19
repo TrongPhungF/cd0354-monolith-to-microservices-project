@@ -1,61 +1,64 @@
-# This config was automatically generated from your source code
-# Stacks detected: cicd:github-actions:.github/workflows,deps:node:udagram-api-user
 version: 2.1
 orbs:
   node: circleci/node@5
+
 jobs:
-  test-node:
-    # Install node dependencies and run tests
-    executor: node/default
-    working_directory: ~/project/udagram-api-user
-    steps:
-      - checkout:
-          path: ~/project
-      - node/install-packages:
-          pkg-manager: npm
-      - run:
-          name: Run tests
-          command: echo \"No test specified in package.json\"
-  build-node:
-    # Build node project
-    executor: node/default
-    working_directory: ~/project/udagram-api-user
-    steps:
-      - checkout:
-          path: ~/project
-      - node/install-packages:
-          pkg-manager: npm
-      - run:
-          command: npm run build
-      - run:
-          name: Create the ~/artifacts directory if it doesn't exist
-          command: mkdir -p ~/artifacts
-      # Copy output to artifacts dir
-      - run:
-          name: Copy artifacts
-          command: cp -R build dist public .output .next .docusaurus ~/artifacts 2>/dev/null || true
-      - store_artifacts:
-          path: ~/artifacts
-          destination: node-build
-  deploy:
-    # This is an example deploy job, not actually used by the workflow
+  build-docker:
     docker:
-      - image: cimg/base:stable
+      - image: circleci/python:3.7  # Adjust the base image as required
+    environment:
+      - UDAGRAM_API_FEED_IMAGE_NAME: udagram-api-feed
+      - UDAGRAM_API_USER_IMAGE_NAME: udagram-api-user
+      - UDAGRAM_FRONTEND_IMAGE_NAME: udagram-frontend
+      - UDAGRAM_REVERSEPROXY_IMAGE_NAME: reverseproxy
     steps:
-      # Replace this with steps to deploy to users
+      - checkout
+      - setup_remote_docker
       - run:
-          name: deploy
-          command: '#e.g. ./deploy.sh'
+          name: Auto-increment TAG
+          command: |
+            # Fetch the latest tags from the repository
+            git fetch --tags
+
+            # Get the latest tag, default to v1 if no tag is found
+            TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1")
+
+            # Increment the numeric part of the tag (e.g., v1 -> v2)
+            NEW_TAG=$(echo $TAG | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+
+            # Print out the new tag for visibility in the logs
+            echo "New TAG version: $NEW_TAG"
+
+            # Use the new tag in further steps
+            echo "export TAG=$NEW_TAG" >> $BASH_ENV
       - run:
-          name: found github actions config
-          command: ':'
+          name: Build Docker Images
+          command: |
+            docker-compose -f ./docker-compose-build.yaml build --parallel
+            docker tag $UDAGRAM_API_FEED_IMAGE_NAME $DOCKER_USERNAME/$UDAGRAM_API_FEED_IMAGE_NAME:$TAG
+            docker tag $UDAGRAM_API_USER_IMAGE_NAME $DOCKER_USERNAME/$UDAGRAM_API_USER_IMAGE_NAME:$TAG
+            docker tag $UDAGRAM_FRONTEND_IMAGE_NAME $DOCKER_USERNAME/$UDAGRAM_FRONTEND_IMAGE_NAME:$TAG
+            docker tag $UDAGRAM_REVERSEPROXY_IMAGE_NAME $DOCKER_USERNAME/$UDAGRAM_REVERSEPROXY_IMAGE_NAME:$TAG
+  push-docker:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Push Docker Images
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            docker push $DOCKER_USERNAME/$UDAGRAM_API_FEED_IMAGE_NAME:$TAG
+            docker push $DOCKER_USERNAME/$UDAGRAM_API_USER_IMAGE_NAME:$TAG
+            docker push $DOCKER_USERNAME/$UDAGRAM_FRONTEND_IMAGE_NAME:$TAG
+            docker push $DOCKER_USERNAME/$UDAGRAM_REVERSEPROXY_IMAGE_NAME:$TAG
+
 workflows:
-  build-and-test:
+  version: 2
+  build_and_push:
     jobs:
-      - test-node
-      - build-node:
+      - build-docker
+      - push-docker:
           requires:
-            - test-node
-    # - deploy:
-    #     requires:
-    #       - build-node
+            - build-docker
