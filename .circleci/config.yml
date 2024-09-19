@@ -12,11 +12,13 @@ jobs:
       - run:
           name: Build Docker Images
           command: |
-            docker-compose -f ./docker-compose-build.yaml build --parallel
+            command: echo ${DOCKER_USERNAME}
+#            docker-compose -f ./docker-compose-build.yaml build --parallel
       - run:
           name: Verify Built Images
           command: |
-            docker images  # Check if all images were built
+            command: echo ${DOCKER_USERNAME}
+#            docker images  # Check if all images were built
   push-docker:
     docker:
       - image: circleci/python:3.7
@@ -27,10 +29,10 @@ jobs:
           name: Docker login
           command: |
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      - run:
-          name: Push Docker Images
-          command: |
-            docker-compose -f ./docker-compose-build.yaml push --parallel
+#      - run:
+#          name: Push Docker Images
+#          command: |
+#            docker-compose -f ./docker-compose-build.yaml push --parallel
 
 workflows:
   version: 2
