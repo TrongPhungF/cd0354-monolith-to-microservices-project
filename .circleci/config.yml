@@ -12,13 +12,7 @@ jobs:
       - run:
           name: Build Docker Images
           command: |
-            echo ${DOCKER_USERNAME}
             docker-compose -f ./docker-compose-build.yaml build --parallel
-      - run:
-          name: Verify Built Images
-          command: |
-            command: echo ${DOCKER_USERNAME}
-            docker images  # Check if all images were built
   push-docker:
     docker:
       - image: circleci/python:3.7
