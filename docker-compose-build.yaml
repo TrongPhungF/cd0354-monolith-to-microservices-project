@@ -7,7 +7,7 @@ services:
   api_user:
     build:
       context: ./udagram-api-user
-    image: ${DOCKER_USERNAME}/udagram-api-user
+    image: tonyloc1998/udagram-api-user
   api_feed:
     build:
       context: ./udagram-api-feed
